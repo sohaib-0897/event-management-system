@@ -11,7 +11,11 @@ The application is a Vite + React JavaScript SPA with Redux Toolkit, React Route
 
 Run `npm test` for mocked tests and `npm run build` for the production bundle. Serve production builds with an SPA fallback to `index.html`.
 
-## Workflow
+## Event discovery
+
+Discovery API search and classifications run directly in the browser. Keyword searches debounce for 350 ms. Requests use AbortController, a 10-second timeout, and start at least 510 ms apart (at most two per second in this app instance). This cannot enforce a shared quota across separate browsers or tabs. Rate-limit errors provide retry guidance without exposing request URLs.
+
+Search results are normalized with image, venue, price, and date fallbacks. Redux caches up to 30 searches for five minutes; API caches are not persisted. Filters live in URL parameters. Daily API quotas still apply.
 
 ## Local accounts
 
