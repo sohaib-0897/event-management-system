@@ -14,12 +14,27 @@ import { initialAuth } from '../auth/authSlice';
 import favorites from '../favorites/favoritesSlice';
 
 function makeStore(userId = 'a', saved) {
-  const user = { id: userId, name: 'Demo User', email: `${userId}@example.com`, salt: 'a'.repeat(32), verifier: 'b'.repeat(64) };
-  return configureStore({ reducer: { auth: () => ({ ...initialAuth, currentUserId: userId, usersById: { [userId]: user } }), registrations, favorites, events: () => ({ entitiesById: {} }) }, preloadedState: saved ? { registrations: saved } : undefined });
+  const user = {
+    id: userId,
+    name: 'Demo User',
+    email: `${userId}@example.com`,
+    salt: 'a'.repeat(32),
+    verifier: 'b'.repeat(64),
+  };
+  return configureStore({
+    reducer: {
+      auth: () => ({ ...initialAuth, currentUserId: userId, usersById: { [userId]: user } }),
+      registrations,
+      favorites,
+      events: () => ({ entitiesById: {} }),
+    },
+    preloadedState: saved ? { registrations: saved } : undefined,
+  });
 }
 describe('event registration', () => {
   it('prevents duplicates, isolates users, and cancels only the active user’s entry', () => {
-    const event = normalizeEvent(rawEvent); const a = makeStore();
+    const event = normalizeEvent(rawEvent);
+    const a = makeStore();
     expect(a.dispatch(registerForEvent(event))).toEqual({ ok: true });
     expect(a.dispatch(registerForEvent(event)).error).toContain('already registered');
     const b = makeStore('b', a.getState().registrations);
@@ -33,8 +48,12 @@ describe('event registration', () => {
   it('rejects guests, cancelled events, and completed events', () => {
     const event = normalizeEvent(rawEvent);
     expect(makeStore(null).dispatch(registerForEvent(event)).ok).toBe(false);
-    expect(makeStore().dispatch(registerForEvent({ ...event, status: 'cancelled' })).ok).toBe(false);
-    expect(makeStore().dispatch(registerForEvent({ ...event, endAt: '2000-01-01T00:00:00Z' })).ok).toBe(false);
+    expect(makeStore().dispatch(registerForEvent({ ...event, status: 'cancelled' })).ok).toBe(
+      false,
+    );
+    expect(
+      makeStore().dispatch(registerForEvent({ ...event, endAt: '2000-01-01T00:00:00Z' })).ok,
+    ).toBe(false);
   });
   it('handles timezone day boundaries and unknown dates honestly', () => {
     const now = Date.parse('2030-06-15T23:30:00Z');
@@ -45,11 +64,37 @@ describe('event registration', () => {
   });
   it('renders Upcoming and Completed from saved snapshots without API calls', async () => {
     const event = normalizeEvent(rawEvent);
-    const store = makeStore('a', { byUserId: { a: {
-      future: { eventSnapshot: { ...event, id: 'future', name: 'Future experience', localDate: '2099-01-01', startAt: null } },
-      past: { eventSnapshot: { ...event, id: 'past', name: 'Past experience', localDate: '2000-01-01', startAt: null } },
-    } } });
-    render(<Provider store={store}><MemoryRouter><MyEventsPage /></MemoryRouter></Provider>);
+    const store = makeStore('a', {
+      byUserId: {
+        a: {
+          future: {
+            eventSnapshot: {
+              ...event,
+              id: 'future',
+              name: 'Future experience',
+              localDate: '2099-01-01',
+              startAt: null,
+            },
+          },
+          past: {
+            eventSnapshot: {
+              ...event,
+              id: 'past',
+              name: 'Past experience',
+              localDate: '2000-01-01',
+              startAt: null,
+            },
+          },
+        },
+      },
+    });
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <MyEventsPage />
+        </MemoryRouter>
+      </Provider>,
+    );
     expect(screen.getByRole('heading', { name: 'Future experience' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Completed/ }));
     expect(screen.getByRole('heading', { name: 'Past experience' })).toBeInTheDocument();

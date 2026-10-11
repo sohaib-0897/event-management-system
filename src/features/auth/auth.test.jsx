@@ -10,7 +10,12 @@ import { hydrate, persist } from '../../app/persistence';
 import { ProtectedRoute } from '../../components/ProtectedRoute';
 import { validateAuth } from '../../utils/validation';
 
-const account = { name: 'Alex Gather', email: ' Alex@example.com ', password: 'demo-pass-123', confirmPassword: 'demo-pass-123' };
+const account = {
+  name: 'Alex Gather',
+  email: ' Alex@example.com ',
+  password: 'demo-pass-123',
+  confirmPassword: 'demo-pass-123',
+};
 describe('local authentication', () => {
   it('registers, prevents duplicate emails, persists, logs out and logs in', async () => {
     vi.stubGlobal('crypto', webcrypto);
@@ -37,14 +42,28 @@ describe('local authentication', () => {
   });
   it('redirects guests away from protected content', () => {
     const store = configureStore({ reducer: { auth } });
-    render(<Provider store={store}><MemoryRouter initialEntries={['/my-events']}><Routes><Route element={<ProtectedRoute />}><Route path="/my-events" element={<p>Private events</p>} /></Route><Route path="/login" element={<p>Login destination</p>} /></Routes></MemoryRouter></Provider>);
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/my-events']}>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/my-events" element={<p>Private events</p>} />
+            </Route>
+            <Route path="/login" element={<p>Login destination</p>} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
     expect(screen.getByText('Login destination')).toBeInTheDocument();
     expect(screen.queryByText('Private events')).not.toBeInTheDocument();
   });
   it('recovers from corrupt storage and invalid sessions', () => {
     localStorage.setItem('gather:v1', '{broken');
     expect(hydrate()).toBeUndefined();
-    localStorage.setItem('gather:v1', JSON.stringify({ version: 1, auth: { usersById: {}, currentUserId: 'missing' } }));
+    localStorage.setItem(
+      'gather:v1',
+      JSON.stringify({ version: 1, auth: { usersById: {}, currentUserId: 'missing' } }),
+    );
     expect(hydrate().auth.currentUserId).toBeNull();
   });
 });

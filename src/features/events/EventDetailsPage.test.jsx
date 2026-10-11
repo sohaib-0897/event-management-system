@@ -14,18 +14,34 @@ import favorites from '../favorites/favoritesSlice';
 vi.mock('../../services/ticketmaster/client', () => ({ ticketmasterRequest: vi.fn() }));
 describe('event details', () => {
   it('fetches complete details even when search summaries are cached', async () => {
-    ticketmasterRequest.mockResolvedValueOnce(searchResponse).mockResolvedValueOnce({ ...rawEvent, info: 'Full event description' });
+    ticketmasterRequest
+      .mockResolvedValueOnce(searchResponse)
+      .mockResolvedValueOnce({ ...rawEvent, info: 'Full event description' });
     const store = configureStore({ reducer: { events, auth, registrations, favorites } });
     await store.dispatch(fetchEvents({ filters: {} }));
     await store.dispatch(fetchEventDetails({ id: rawEvent.id }));
-    expect(store.getState().events.entitiesById[rawEvent.id].description).toBe('Full event description');
+    expect(store.getState().events.entitiesById[rawEvent.id].description).toBe(
+      'Full event description',
+    );
     await store.dispatch(fetchEventDetails({ id: rawEvent.id }));
     expect(ticketmasterRequest).toHaveBeenCalledTimes(2);
   });
   it('renders an external purchase link and honest missing data', async () => {
-    ticketmasterRequest.mockResolvedValue({ id: 'demo-event', name: 'Mystery show', url: 'https://www.ticketmaster.com/demo-event' });
+    ticketmasterRequest.mockResolvedValue({
+      id: 'demo-event',
+      name: 'Mystery show',
+      url: 'https://www.ticketmaster.com/demo-event',
+    });
     const store = configureStore({ reducer: { events, auth, registrations, favorites } });
-    render(<Provider store={store}><MemoryRouter initialEntries={['/events/demo-event']}><Routes><Route path="/events/:eventId" element={<EventDetailsPage />} /></Routes></MemoryRouter></Provider>);
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/events/demo-event']}>
+          <Routes>
+            <Route path="/events/:eventId" element={<EventDetailsPage />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
     expect(await screen.findByRole('heading', { name: 'Mystery show' })).toBeInTheDocument();
     const link = screen.getByRole('link', { name: 'Tickets on Ticketmaster' });
     expect(link).toHaveAttribute('target', '_blank');
