@@ -41,4 +41,6 @@ Upcoming includes unknown-date events with a pending label. Completed uses a kno
 
 ## Feature branches
 
+Favorites are stored per user with snapshots and are available on `/favorites`. Guests are prompted to log in before saving; heart buttons toggle saved state on cards and details. Favorites and registrations remain independent.
+
 Each feature is developed on its own branch with several meaningful commits. PRs are merged using merge commits. Feature documentation and validation results accompany each PR.

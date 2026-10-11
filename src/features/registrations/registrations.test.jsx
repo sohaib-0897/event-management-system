@@ -11,10 +11,11 @@ import { rawEvent } from '../../test/fixtures/events';
 import { isCompleted } from '../../utils/dates';
 import { hydrate, persist } from '../../app/persistence';
 import { initialAuth } from '../auth/authSlice';
+import favorites from '../favorites/favoritesSlice';
 
 function makeStore(userId = 'a', saved) {
   const user = { id: userId, name: 'Demo User', email: `${userId}@example.com`, salt: 'a'.repeat(32), verifier: 'b'.repeat(64) };
-  return configureStore({ reducer: { auth: () => ({ ...initialAuth, currentUserId: userId, usersById: { [userId]: user } }), registrations, events: () => ({ entitiesById: {} }) }, preloadedState: saved ? { registrations: saved } : undefined });
+  return configureStore({ reducer: { auth: () => ({ ...initialAuth, currentUserId: userId, usersById: { [userId]: user } }), registrations, favorites, events: () => ({ entitiesById: {} }) }, preloadedState: saved ? { registrations: saved } : undefined });
 }
 describe('event registration', () => {
   it('prevents duplicates, isolates users, and cancels only the active user’s entry', () => {
