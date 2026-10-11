@@ -13,4 +13,12 @@ Run `npm test` for mocked tests and `npm run build` for the production bundle. S
 
 ## Workflow
 
+## Local accounts
+
+Registration, login, and logout are simulated in this browser using versioned Local Storage. Passwords are stored as salted PBKDF2 verifiers. This is an assignment demo, not server-enforced security. Use demo credentials. Clearing browser storage removes accounts and saved events.
+
+The `/my-events` route requires a local session; guests return to their intended route after login.
+
+## Git workflow
+
 Each feature is developed on its own branch with several meaningful commits. PRs are merged using merge commits. Feature documentation and validation results accompany each PR.
