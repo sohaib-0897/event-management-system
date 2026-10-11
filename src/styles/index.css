@@ -2,6 +2,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root { font-family: 'Segoe UI', Arial, sans-serif; color: #25342c; background: #faf9f6; font-synthesis: none; --bg: #faf9f6; --surface: #fff; --ink: #25342c; --muted: #72776e; --line: #e4e6dc; --accent: #d6ee88; --soft: #f0f2e9; }
+.dark { color: #e7eddf; background: #19211c; --bg: #19211c; --surface: #222d25; --ink: #e7eddf; --muted: #acb7a7; --line: #3a473d; --soft: #2b372d; }
+.dark h1 em, .dark .eyebrow, .dark .event-date, .dark .registered-label, .dark .saved-card-action span { color: #b3ce81; }
+.dark .orbit { border-color: #475842; }
+.dark .hero-spark { color: #aacb76; }
+.dark .booking-panel .button:not(.primary):not(.secondary) { color: #19211c; }
+.theme-toggle { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); flex-shrink: 0; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
 button, input, select { font: inherit; }
