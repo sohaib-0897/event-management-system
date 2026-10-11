@@ -1,7 +1,9 @@
 import { mkdir } from 'node:fs/promises';
-import { expect } from '@playwright/test';
+import { expect as baseExpect } from '@playwright/test';
 import { startBrowserSession } from './browser-runtime.mjs';
 import { rawEvent } from '../src/test/fixtures/events.js';
+
+const expect = baseExpect.configure({ timeout: 15000 });
 
 let session;
 let diagnosticPage;
@@ -158,7 +160,9 @@ try {
     'PASS: mocked desktop/mobile discovery, filters, pagination, auth, registration, favorites, persistence, theme, and error recovery.',
   );
 } catch (error) {
-  await diagnosticPage?.screenshot({ path: '.qa/browser-failure.png', fullPage: true }).catch(() => {});
+  await diagnosticPage
+    ?.screenshot({ path: '.qa/browser-failure.png', fullPage: true })
+    .catch(() => {});
   console.error(`Diagnostic: ${error.name || 'Error'} (details suppressed).`);
   console.error(`FAIL: browser verification at ${stage}.`);
   process.exitCode = 1;

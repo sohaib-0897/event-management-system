@@ -614,6 +614,9 @@ h3 {
   font-size: 16px;
   transform: rotate(-6deg);
   color: var(--muted);
+  z-index: 3;
+  background: var(--bg);
+  padding: 3px 8px;
 }
 .search-bar {
   display: flex;
