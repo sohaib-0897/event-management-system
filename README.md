@@ -21,6 +21,8 @@ Search results are normalized with image, venue, price, and date fallbacks. Redu
 
 ## Event details
 
+Sort options are recommended, earliest/latest date, and name. Pagination uses 20 results per page and caps at page index 49. Filter and sort changes reset pagination; URL query state supports refresh and browser history.
+
 Details use a separate freshness cache from search summaries and show event status, date/time, venue, prices, descriptions, and notices. The purchase action opens the returned Ticketmaster URL externally. There is no Partner API integration or checkout.
 
 ## Simulated authentication
