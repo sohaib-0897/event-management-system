@@ -1,10 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { ticketmasterRequest } from '../../services/ticketmaster/client';
-import { normalizeSearch } from '../../services/ticketmaster/normalize';
+import { normalizeEvent, normalizeSearch } from '../../services/ticketmaster/normalize';
 import { apiParams, queryKey } from '../../services/ticketmaster/query';
 
 export const CACHE_TTL = 5 * 60 * 1000;
 export const fresh = (entry) => entry?.status === 'success' && Date.now() - entry.fetchedAt < CACHE_TTL;
+export const fetchEventDetails = createAsyncThunk('events/details', async ({ id }, { signal, rejectWithValue }) => {
+  try {
+    const event = normalizeEvent(await ticketmasterRequest(`events/${encodeURIComponent(id)}.json`, {}, { signal }));
+    if (!event.id) return rejectWithValue('This event is no longer available.');
+    return event;
+  } catch (error) { if (signal.aborted) throw error; return rejectWithValue(error.message); }
+}, { condition: ({ id, force }, { getState }) => {
+  const entry = getState().events.detailsById[id];
+  return entry?.status !== 'loading' && (force || !fresh(entry));
+} });
 export const fetchEvents = createAsyncThunk('events/search', async ({ filters }, { signal, rejectWithValue }) => {
   try { return normalizeSearch(await ticketmasterRequest('events.json', apiParams(filters), { signal })); }
   catch (error) { if (signal.aborted) throw error; return rejectWithValue(error.message); }
@@ -20,6 +30,23 @@ export const fetchCategories = createAsyncThunk('events/categories', async (_, {
   } catch (error) { if (signal.aborted) throw error; return rejectWithValue(error.message); }
 }, { condition: (_, { getState }) => getState().events.classifications.status !== 'loading' && !fresh(getState().events.classifications) });
 const eventsSlice = createSlice({ name: 'events', initialState: { entitiesById: {}, queriesByKey: {}, detailsById: {}, classifications: { items: [], status: 'idle', error: null, fetchedAt: 0 } }, reducers: {}, extraReducers(builder) {
+  builder.addCase(fetchEventDetails.pending, (state, action) => {
+    state.detailsById[action.meta.arg.id] = { status: 'loading', error: null, requestId: action.meta.requestId };
+  }).addCase(fetchEventDetails.fulfilled, (state, action) => {
+    const id = action.meta.arg.id;
+    if (state.detailsById[id]?.requestId !== action.meta.requestId) return;
+    state.entitiesById[id] = action.payload;
+    state.detailsById[id] = { status: 'success', error: null, fetchedAt: Date.now() };
+    const older = Object.keys(state.detailsById).filter((k) => k !== id && state.detailsById[k].status !== 'loading').sort((a, b) => (state.detailsById[a].fetchedAt || 0) - (state.detailsById[b].fetchedAt || 0));
+    while (Object.keys(state.detailsById).length > 40 && older.length) {
+      const expired = older.shift(); delete state.detailsById[expired];
+      if (!Object.values(state.queriesByKey).some((q) => q.ids?.includes(expired))) delete state.entitiesById[expired];
+    }
+  }).addCase(fetchEventDetails.rejected, (state, action) => {
+    const entry = state.detailsById[action.meta.arg.id];
+    if (entry?.requestId !== action.meta.requestId) return;
+    entry.status = action.meta.aborted ? 'idle' : 'error'; entry.error = action.meta.aborted ? null : action.payload || 'Unable to load this event.';
+  });
   builder.addCase(fetchEvents.pending, (state, action) => {
     const key = queryKey(action.meta.arg.filters);
     state.queriesByKey[key] = { ...state.queriesByKey[key], status: 'loading', error: null, requestId: action.meta.requestId };

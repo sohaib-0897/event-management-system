@@ -19,6 +19,12 @@ Search results are normalized with image, venue, price, and date fallbacks. Redu
 
 ## Local accounts
 
+## Event details
+
+Details use a separate freshness cache from search summaries and show event status, date/time, venue, prices, descriptions, and notices. The purchase action opens the returned Ticketmaster URL externally. There is no Partner API integration or checkout.
+
+## Simulated authentication
+
 Registration, login, and logout are simulated in this browser using versioned Local Storage. Passwords are stored as salted PBKDF2 verifiers. This is an assignment demo, not server-enforced security. Use demo credentials. Clearing browser storage removes accounts and saved events.
 
 The `/my-events` route requires a local session; guests return to their intended route after login.

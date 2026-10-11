@@ -42,6 +42,22 @@ h3 { font-weight: 650; }
 .spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid var(--line); border-top-color: #6d873e; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .muted { color: var(--muted); }
+.back-link { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 25px; }
+.detail-banner { position: relative; height: 360px; border-radius: 18px; overflow: hidden; background: var(--soft); }
+.detail-banner img { width: 100%; height: 100%; object-fit: cover; }
+.detail-grid { display: grid; grid-template-columns: 1fr 320px; gap: 55px; margin-top: 40px; }
+.detail-grid h1 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -1.5px; }
+.detail-facts p { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); margin: 16px 0; }
+.detail-facts svg { color: #6d873e; flex-shrink: 0; }
+.detail-copy { border-top: 1px solid var(--line); padding-top: 15px; margin-top: 25px; }
+.detail-copy p { color: var(--muted); line-height: 1.9; font-size: 14px; white-space: pre-line; }
+.booking-panel { background: var(--surface); padding: 28px; border-radius: 16px; border: 1px solid var(--line); align-self: start; }
+.booking-panel h2 { margin: 0 0 14px; }
+.booking-panel > p.muted { font-size: 12px; line-height: 1.7; margin-bottom: 22px; }
+.booking-panel .button { font-size: 12px; padding: 12px; }
+.event-status { display: inline-block; font-size: 11px; padding: 6px 10px; background: var(--soft); border-radius: 6px; }
+.image-credit { font-size: 10px; color: var(--muted); margin-top: 6px; }
+@media (max-width: 760px) { .detail-grid { grid-template-columns: 1fr; gap: 25px; } .detail-banner { height: 230px; } }
 .discovery-hero { display: grid; grid-template-columns: 1.2fr 1fr; min-height: 325px; gap: 35px; align-items: center; margin-bottom: 35px; }
 .hero-note { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 22px; }
 .note-dot { width: 6px; height: 6px; border-radius: 50%; background: #82a546; }
