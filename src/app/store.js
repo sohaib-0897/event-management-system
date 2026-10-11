@@ -1,4 +1,11 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
+import auth from '../features/auth/authSlice';
+import { hydrate, persist } from './persistence';
 
-const app = createSlice({ name: 'app', initialState: {}, reducers: {} });
-export const store = configureStore({ reducer: { app: app.reducer } });
+export function createAppStore(preloadedState) {
+  const saved = preloadedState === undefined ? hydrate() : preloadedState;
+  const store = configureStore({ reducer: { auth }, preloadedState: saved ? { auth: saved.auth } : undefined });
+  store.subscribe(() => persist(store.getState()));
+  return store;
+}
+export const store = createAppStore();
