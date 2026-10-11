@@ -33,4 +33,12 @@ The `/my-events` route requires a local session; guests return to their intended
 
 ## Git workflow
 
+## Registration and My Events
+
+Registration is a local per-user calendar entry, not a ticket reservation. Duplicate event IDs are rejected for each user. Cancel removes only the active user's entry. Snapshots persist so My Events works without API access.
+
+Upcoming includes unknown-date events with a pending label. Completed uses a known end timestamp; otherwise it moves an event after the end of its calendar day in its venue timezone (UTC fallback). Tabs re-evaluate once per minute while open. Event cancellation and postponement are separate from local registration.
+
+## Feature branches
+
 Each feature is developed on its own branch with several meaningful commits. PRs are merged using merge commits. Feature documentation and validation results accompany each PR.
