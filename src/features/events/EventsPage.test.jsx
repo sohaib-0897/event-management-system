@@ -8,13 +8,15 @@ import events from './eventsSlice';
 import { EventsPage } from './EventsPage';
 import { ticketmasterRequest } from '../../services/ticketmaster/client';
 import { searchResponse } from '../../test/fixtures/events';
+import auth from '../auth/authSlice';
+import favorites from '../favorites/favoritesSlice';
 
 vi.mock('../../services/ticketmaster/client', () => ({ ticketmasterRequest: vi.fn() }));
 function Location() { const location = useLocation(); return <output data-testid="location">{location.search}</output>; }
 describe('search URL state', () => {
   it('resets pagination when sorting changes and preserves filters', async () => {
     ticketmasterRequest.mockImplementation(async (path) => path === 'classifications.json' ? {} : searchResponse);
-    const store = configureStore({ reducer: { events } });
+    const store = configureStore({ reducer: { events, auth, favorites } });
     render(<Provider store={store}><MemoryRouter initialEntries={['/events?keyword=live&page=2']}><EventsPage /><Location /></MemoryRouter></Provider>);
     await screen.findByRole('heading', { name: 'The Midnight — Live' });
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort events' }), 'date,asc');
