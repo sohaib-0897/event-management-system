@@ -8,12 +8,19 @@ import { ThemeToggle } from './ThemeToggle';
 import { initialAuth } from '../auth/authSlice';
 import { hydrate, persist } from '../../app/persistence';
 
-afterEach(() => { document.documentElement.classList.remove('dark'); document.documentElement.style.colorScheme = ''; });
+afterEach(() => {
+  document.documentElement.classList.remove('dark');
+  document.documentElement.style.colorScheme = '';
+});
 describe('theme preferences', () => {
   it('toggles the document theme, persists it, and restores it on reload', async () => {
     const store = configureStore({ reducer: { preferences, auth: () => initialAuth } });
     store.subscribe(() => persist(store.getState()));
-    render(<Provider store={store}><ThemeToggle /></Provider>);
+    render(
+      <Provider store={store}>
+        <ThemeToggle />
+      </Provider>,
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
     expect(document.documentElement).toHaveClass('dark');
     expect(hydrate().preferences.theme).toBe('dark');

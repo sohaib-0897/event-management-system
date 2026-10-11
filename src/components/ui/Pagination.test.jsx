@@ -5,7 +5,8 @@ import { Pagination } from './Pagination';
 
 describe('pagination boundaries', () => {
   it('prevents navigating before the first page', async () => {
-    const change = vi.fn(); render(<Pagination page={0} totalPages={3} onChange={change} />);
+    const change = vi.fn();
+    render(<Pagination page={0} totalPages={3} onChange={change} />);
     expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     expect(change).toHaveBeenCalledWith(1);

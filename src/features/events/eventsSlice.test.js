@@ -11,7 +11,8 @@ describe('search cache', () => {
     ticketmasterRequest.mockResolvedValue(searchResponse);
     const store = configureStore({ reducer: { events } });
     const first = store.dispatch(fetchEvents({ filters: {} }));
-    await store.dispatch(fetchEvents({ filters: {} })); await first;
+    await store.dispatch(fetchEvents({ filters: {} }));
+    await first;
     await store.dispatch(fetchEvents({ filters: {} }));
     expect(ticketmasterRequest).toHaveBeenCalledOnce();
     expect(store.getState().events.queriesByKey[queryKey({})].ids).toEqual(['demo-event']);
@@ -19,7 +20,9 @@ describe('search cache', () => {
     expect(ticketmasterRequest).toHaveBeenCalledTimes(2);
   });
   it('records recoverable errors and can retry', async () => {
-    ticketmasterRequest.mockRejectedValueOnce(new Error('Connection unavailable')).mockResolvedValueOnce(searchResponse);
+    ticketmasterRequest
+      .mockRejectedValueOnce(new Error('Connection unavailable'))
+      .mockResolvedValueOnce(searchResponse);
     const store = configureStore({ reducer: { events } });
     await store.dispatch(fetchEvents({ filters: {} }));
     expect(store.getState().events.queriesByKey[queryKey({})].status).toBe('error');
