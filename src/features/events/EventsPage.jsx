@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Search, SlidersHorizontal, MapPin } from 'lucide-react';
@@ -19,15 +19,18 @@ export function EventsPage() {
   const entry = useSelector((s) => s.events.queriesByKey[key]);
   const entities = useSelector((s) => s.events.entitiesById);
   const categories = useSelector((s) => s.events.classifications);
-  function update(patch) {
-    setParams((previous) => {
-      const next = new URLSearchParams(previous);
-      for (const [name, value] of Object.entries(patch))
-        value ? next.set(name, value) : next.delete(name);
-      next.delete('page');
-      return next;
-    });
-  }
+  const update = useCallback(
+    (patch) => {
+      setParams((previous) => {
+        const next = new URLSearchParams(previous);
+        for (const [name, value] of Object.entries(patch))
+          value ? next.set(name, value) : next.delete(name);
+        next.delete('page');
+        return next;
+      });
+    },
+    [setParams],
+  );
   useEffect(() => {
     setKeyword(filters.keyword);
   }, [filters.keyword]);
@@ -38,12 +41,12 @@ export function EventsPage() {
     if (city.trim() === filters.city) return;
     const timer = setTimeout(() => update({ city: city.trim() }), 350);
     return () => clearTimeout(timer);
-  }, [city, filters.city]);
+  }, [city, filters.city, update]);
   useEffect(() => {
     if (keyword.trim() === filters.keyword) return;
     const timer = setTimeout(() => update({ keyword: keyword.trim() }), 350);
     return () => clearTimeout(timer);
-  }, [keyword, filters.keyword]);
+  }, [keyword, filters.keyword, update]);
   useEffect(() => {
     let task;
     const timer = setTimeout(() => {
@@ -181,6 +184,7 @@ export function EventsPage() {
         <div className="category-row" aria-label="Event categories">
           <button
             className={`category-chip ${!filters.category ? 'selected' : ''}`}
+            aria-pressed={!filters.category}
             onClick={() => update({ category: '' })}
           >
             ✦ All experiences
@@ -189,6 +193,7 @@ export function EventsPage() {
             <button
               key={category.id}
               className={`category-chip ${filters.category === category.id ? 'selected' : ''}`}
+              aria-pressed={filters.category === category.id}
               onClick={() => update({ category: category.id })}
             >
               {category.name}

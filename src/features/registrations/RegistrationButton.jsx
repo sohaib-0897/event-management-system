@@ -13,6 +13,7 @@ export function RegistrationButton({ event }) {
   const registered = useSelector((s) => Boolean(s.registrations.byUserId[userId]?.[event.id]));
   const [message, setMessage] = useState('');
   const unavailable = event.status === 'cancelled' || isCompleted(event);
+  const completed = isCompleted(event);
   function register() {
     if (!userId)
       return navigate('/login', { state: { from: location.pathname + location.search } });
@@ -25,17 +26,19 @@ export function RegistrationButton({ event }) {
         <>
           <p className="registered-label">
             <Check size={15} />
-            You’re registered
+            {completed ? 'Completed registration' : 'You’re registered'}
           </p>
-          <button
-            className="button secondary w-full"
-            onClick={() => {
-              dispatch(cancelRegistration(event.id));
-              setMessage('Registration cancelled.');
-            }}
-          >
-            Cancel registration
-          </button>
+          {!completed && (
+            <button
+              className="button secondary w-full"
+              onClick={() => {
+                const result = dispatch(cancelRegistration(event.id));
+                setMessage(result.ok ? 'Registration cancelled.' : result.error);
+              }}
+            >
+              Cancel registration
+            </button>
+          )}
         </>
       ) : (
         <button className="button w-full" onClick={register} disabled={unavailable}>

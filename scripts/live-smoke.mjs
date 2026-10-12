@@ -32,12 +32,14 @@ try {
     }
   });
   if (!result.ok) throw new Error('Smoke check failed');
-  console.log(
-    `PASS: live Discovery search=${result.search}, classifications=${result.classifications}, details=${result.details}.`,
+  process.stdout.write(
+    `PASS: live Discovery search=${result.search}, classifications=${result.classifications}, details=${result.details}.` +
+      '\n',
   );
 } catch {
-  console.error(
-    'FAIL: live Discovery smoke check. Check local configuration, connectivity, or quota. No credential or request details were logged.',
+  process.stderr.write(
+    'FAIL: live Discovery smoke check. Check local configuration, connectivity, or quota. No credential or request details were logged.' +
+      '\n',
   );
   process.exitCode = 1;
 } finally {

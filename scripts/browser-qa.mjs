@@ -11,7 +11,10 @@ let stage = 'startup';
 try {
   session = await startBrowserSession('test');
   await mkdir('.qa', { recursive: true });
-  const context = await session.browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await session.browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    reducedMotion: 'reduce',
+  });
   let failureMode = '';
   const searches = [];
   const future = {
@@ -62,8 +65,16 @@ try {
   diagnosticPage = page;
   page.setDefaultTimeout(15000);
   let pageErrors = 0;
+  let consoleWarnings = 0;
   page.on('pageerror', () => {
     pageErrors += 1;
+  });
+  page.on('console', (message) => {
+    if (
+      ['warning', 'error'].includes(message.type()) &&
+      !message.text().startsWith('Failed to load resource:')
+    )
+      consoleWarnings += 1;
   });
   stage = 'discovery';
   await page.goto(`${session.baseUrl}/events`);
@@ -155,16 +166,166 @@ try {
   failureMode = '';
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.getByRole('heading', { name: future.name })).toBeVisible();
+  stage = 'main-page layout, contrast and keyboard audit';
+  await page.goto(`${session.baseUrl}/events/demo-event`);
+  await page.getByRole('button', { name: 'Register for event' }).click();
+  await page.getByRole('button', { name: `Save ${future.name} to favorites` }).click();
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('gather:v1'));
+    const entries = saved.registrations.byUserId[saved.auth.currentUserId];
+    entries['past-fixture'] = {
+      registeredAt: '2000-01-01T00:00:00Z',
+      eventSnapshot: {
+        ...entries['demo-event'].eventSnapshot,
+        id: 'past-fixture',
+        name: 'Completed fixture experience',
+        startAt: '2000-01-01T19:00:00Z',
+        localDate: '2000-01-01',
+        endAt: '2000-01-01T21:00:00Z',
+      },
+    };
+    localStorage.setItem('gather:v1', JSON.stringify(saved));
+  });
+  async function auditPage(path, theme, width) {
+    stage = `review ${path} ${theme} ${width}`;
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${session.baseUrl}${path}`);
+    if (path === '/events')
+      await expect(page.getByRole('heading', { name: future.name })).toBeVisible();
+    else if (path === '/events/demo-event')
+      await expect(page.getByRole('heading', { name: future.name })).toBeVisible();
+    else await expect(page.locator('main h1:visible, main h2:visible').first()).toBeVisible();
+    const toggle = page.getByRole('button', { name: `Switch to ${theme} mode` });
+    if (await toggle.count()) await toggle.click();
+    await expect(page.locator('html')).toHaveClass(theme === 'dark' ? 'dark' : '');
+    const result = await page.evaluate(() => {
+      const rgb = (value) => {
+        const parts = value.match(/[\d.]+/g)?.map(Number) || [];
+        return [parts[0] || 0, parts[1] || 0, parts[2] || 0, parts[3] ?? 1];
+      };
+      const background = (element) => {
+        const ancestry = [];
+        for (let node = element; node; node = node.parentElement) ancestry.unshift(node);
+        return ancestry.reduce(
+          (base, node) => {
+            const color = rgb(getComputedStyle(node).backgroundColor);
+            return color
+              .slice(0, 3)
+              .map((channel, i) => channel * color[3] + base[i] * (1 - color[3]));
+          },
+          [255, 255, 255],
+        );
+      };
+      const lum = (color) =>
+        color
+          .map((channel) => {
+            const value = channel / 255;
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          })
+          .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
+      const failures = [];
+      let samples = 0;
+      const check = (element, pseudo) => {
+        const style = getComputedStyle(element, pseudo);
+        const color = rgb(style.color);
+        const bg = background(element);
+        const fg = color.slice(0, 3).map((value, i) => value * color[3] + bg[i] * (1 - color[3]));
+        const ratio = (Math.max(lum(fg), lum(bg)) + 0.05) / (Math.min(lum(fg), lum(bg)) + 0.05);
+        const size = parseFloat(style.fontSize);
+        const large = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700);
+        const minimum = large ? 3 : 4.5;
+        samples += 1;
+        if (ratio < minimum)
+          failures.push({
+            element: element.tagName + '.' + element.className,
+            ratio: Number(ratio.toFixed(2)),
+            minimum,
+          });
+      };
+      const visible = (element) =>
+        element.getClientRects().length && !element.closest('[aria-hidden="true"], :disabled');
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const element = node.parentElement;
+        if (
+          node.textContent.trim() &&
+          element &&
+          visible(element) &&
+          !['SCRIPT', 'STYLE', 'OPTION', 'TITLE'].includes(element.tagName)
+        )
+          check(element);
+      }
+      for (const input of document.querySelectorAll('input, select'))
+        if (visible(input)) {
+          check(input);
+          if (input.hasAttribute('placeholder')) check(input, '::placeholder');
+        }
+      return {
+        overflow: document.documentElement.scrollWidth > innerWidth,
+        failures,
+        samples,
+        missingLabels: [...document.querySelectorAll('input, select')].filter(
+          (input) =>
+            visible(input) &&
+            !input.labels?.length &&
+            !input.getAttribute('aria-label') &&
+            !input.getAttribute('aria-labelledby'),
+        ).length,
+        missingAlt: [...document.images].filter((image) => !image.hasAttribute('alt')).length,
+      };
+    });
+    expect(result.overflow).toBe(false);
+    expect(result.missingLabels).toBe(0);
+    expect(result.missingAlt).toBe(0);
+    if (result.failures.length)
+      process.stderr.write(`Contrast findings: ${JSON.stringify(result.failures)}\n`);
+    expect(result.failures).toHaveLength(0);
+    expect(result.samples).toBeGreaterThan(5);
+    if (path.includes('tab=completed'))
+      await expect(page.getByRole('button', { name: 'Cancel registration' })).toHaveCount(0);
+    await page.evaluate(() => {
+      document.activeElement?.blur();
+      document.body.setAttribute('tabindex', '-1');
+      document.body.focus();
+      document.body.removeAttribute('tabindex');
+    });
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#main')).toBeFocused();
+    await page.screenshot({
+      path: `.qa/polish-${theme}-${width}-${path.replace(/[^a-z0-9]/gi, '-')}.png`,
+      fullPage: true,
+    });
+  }
+  for (const theme of ['light', 'dark'])
+    for (const width of [375, 768, 1440])
+      for (const path of [
+        '/events',
+        '/events/demo-event',
+        '/my-events',
+        '/my-events?tab=completed',
+        '/favorites',
+        '/not-a-page',
+      ])
+        await auditPage(path, theme, width);
+  await page.getByRole('button', { name: 'Log out' }).click();
+  for (const theme of ['light', 'dark'])
+    for (const width of [375, 768, 1440])
+      for (const path of ['/login', '/register']) await auditPage(path, theme, width);
   expect(pageErrors).toBe(0);
-  console.log(
-    'PASS: mocked desktop/mobile discovery, filters, pagination, auth, registration, favorites, persistence, theme, and error recovery.',
+  expect(consoleWarnings).toBe(0);
+  process.stdout.write(
+    'PASS: mocked discovery, auth, registrations, favorites and recovery; 48 page/theme/width reviews with contrast, focus, labels, alt text and zero runtime warnings.' +
+      '\n',
   );
 } catch (error) {
   await diagnosticPage
     ?.screenshot({ path: '.qa/browser-failure.png', fullPage: true })
     .catch(() => {});
-  console.error(`Diagnostic: ${error.name || 'Error'} (details suppressed).`);
-  console.error(`FAIL: browser verification at ${stage}.`);
+  process.stderr.write(`Diagnostic: ${error.name || 'Error'} (details suppressed).` + '\n');
+  process.stderr.write(`FAIL: browser verification at ${stage}.` + '\n');
   process.exitCode = 1;
 } finally {
   await session?.close();

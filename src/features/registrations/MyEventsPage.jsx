@@ -78,15 +78,19 @@ export function MyEventsPage() {
                       ? 'Completed'
                       : 'Registered'}
                 </span>
-                <button
-                  className="text-link"
-                  onClick={() => {
-                    dispatch(cancelRegistration(event.id));
-                    setMessage(`Registration for ${event.name} cancelled.`);
-                  }}
-                >
-                  Cancel registration
-                </button>
+                {!completed && (
+                  <button
+                    className="text-link"
+                    onClick={() => {
+                      const result = dispatch(cancelRegistration(event.id));
+                      setMessage(
+                        result.ok ? `Registration for ${event.name} cancelled.` : result.error,
+                      );
+                    }}
+                  >
+                    Cancel registration
+                  </button>
+                )}
               </div>
             </EventCard>
           ))}

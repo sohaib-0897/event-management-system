@@ -4,6 +4,18 @@ import { rawEvent } from '../../test/fixtures/events';
 import { validFilters, apiParams } from './query';
 
 describe('normalization and filters', () => {
+  it('requests upcoming events and handles impossible or past date ranges', () => {
+    const now = Date.parse('2030-06-15T14:00:00Z');
+    expect(apiParams({}, now)).toMatchObject({
+      startDateTime: '2030-06-15T14:00:00Z',
+      includeTBA: 'yes',
+      includeTBD: 'yes',
+    });
+    expect(apiParams({ from: '2030-06-01' }, now).startDateTime).toBe('2030-06-15T14:00:00Z');
+    expect(apiParams({ from: '2030-06-20' }, now).startDateTime).toBe('2030-06-20T00:00:00Z');
+    expect(() => apiParams({ to: '2030-06-01' }, now)).toThrow('upcoming events');
+    expect(validFilters({ from: '2030-02-30' }).from).toBe('');
+  });
   it('normalizes event data and supplies honest fallbacks', () => {
     expect(normalizeEvent(rawEvent)).toMatchObject({
       id: 'demo-event',

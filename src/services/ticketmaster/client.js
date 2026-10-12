@@ -35,7 +35,7 @@ export function createTicketmasterClient({
       release();
     }
   }
-  return async function request(path, params = {}, { signal } = {}) {
+  return async function (path, params = {}, { signal } = {}) {
     const key = getKey();
     if (!key)
       throw new Error(

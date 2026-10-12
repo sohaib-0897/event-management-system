@@ -48,7 +48,7 @@ export function Layout() {
           Browser storage is unavailable. Changes may not survive a refresh.
         </p>
       )}
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <Outlet />
       </main>
       <footer className="site-footer">
