@@ -25,6 +25,7 @@
   --soft: #2b372d;
 }
 .dark h1 em,
+.dark .brand-dot,
 .dark .eyebrow,
 .dark .event-date,
 .dark .registered-label,
@@ -124,7 +125,7 @@ select {
   font-family: Georgia, serif;
 }
 .brand-dot {
-  color: #7fa439;
+  color: #526d2e;
 }
 nav {
   display: flex;
@@ -151,7 +152,7 @@ nav a.active {
   font-size: 11px;
   letter-spacing: 2.4px;
   font-weight: 750;
-  color: #688038;
+  color: #526d2e;
   margin-bottom: 20px;
 }
 h1 {
