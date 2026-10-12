@@ -9,7 +9,7 @@
   --bg: #faf9f6;
   --surface: #fff;
   --ink: #25342c;
-  --muted: #72776e;
+  --muted: #666d61;
   --line: #e4e6dc;
   --accent: #d6ee88;
   --soft: #f0f2e9;
@@ -37,8 +37,8 @@
 .dark .hero-spark {
   color: #aacb76;
 }
-.dark .booking-panel .button:not(.primary):not(.secondary) {
-  color: #19211c;
+.dark .favorite-detail[aria-pressed='true'] {
+  color: #ef9d9f;
 }
 .theme-toggle {
   display: grid;
@@ -81,8 +81,15 @@ a {
   text-decoration: none;
 }
 :focus-visible {
-  outline: 3px solid #79a94a;
+  outline: 3px solid #526d2e;
   outline-offset: 4px;
+}
+.dark :focus-visible {
+  outline-color: #b3ce81;
+}
+input::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 button,
 input,
@@ -133,11 +140,6 @@ nav a {
 nav a.active {
   color: var(--ink);
   border-bottom: 2px solid #7fa439;
-}
-.header-note {
-  margin-left: auto;
-  font-size: 13px;
-  color: var(--muted);
 }
 .page {
   max-width: 1240px;
@@ -234,6 +236,7 @@ h3 {
   left: 20px;
   padding: 12px;
   background: var(--accent);
+  color: #25342c;
   z-index: 100;
 }
 .skip-link:focus {
@@ -307,7 +310,7 @@ h3 {
   display: flex;
   gap: 7px;
   align-items: center;
-  color: #6d873e;
+  color: #526d2e;
   font-size: 12px;
   margin-bottom: 15px;
 }
@@ -359,7 +362,7 @@ h3 {
 }
 .saved-card-action span {
   font-size: 10px;
-  color: #6d873e;
+  color: #526d2e;
 }
 .saved-card-action .text-link {
   font-size: 11px;
@@ -654,6 +657,7 @@ h3 {
   align-items: center;
   gap: 8px;
   background: var(--soft);
+  color: var(--ink);
   border: 0;
   padding: 12px 18px;
   font-size: 12px;
@@ -768,7 +772,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #718741;
+  color: #526d2e;
   font-size: 11px;
   margin: 0 0 10px;
 }
@@ -990,9 +994,6 @@ h3 {
     padding: 18px 20px;
     gap: 18px;
     flex-wrap: wrap;
-  }
-  .header-note {
-    display: none;
   }
   nav {
     gap: 16px;

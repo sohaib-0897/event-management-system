@@ -29,7 +29,14 @@ export const registerForEvent = (event) => (dispatch, getState) => {
   return { ok: true };
 };
 export const cancelRegistration = (eventId) => (dispatch, getState) => {
-  const userId = getState().auth.currentUserId;
-  if (userId) dispatch(removed({ userId, eventId }));
+  const state = getState();
+  const userId = state.auth.currentUserId;
+  const entry = state.registrations.byUserId[userId]?.[eventId];
+  if (!userId || !entry) return { ok: false, error: 'No active registration was found.' };
+  const event = state.events?.entitiesById[eventId] || entry.eventSnapshot;
+  if (isCompleted(event))
+    return { ok: false, error: 'Completed registrations cannot be cancelled.' };
+  dispatch(removed({ userId, eventId }));
+  return { ok: true };
 };
 export default registrationsSlice.reducer;

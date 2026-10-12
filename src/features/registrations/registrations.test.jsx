@@ -98,7 +98,11 @@ describe('event registration', () => {
     expect(screen.getByRole('heading', { name: 'Future experience' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Completed/ }));
     expect(screen.getByRole('heading', { name: 'Past experience' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel registration' })).not.toBeInTheDocument();
+    expect(store.dispatch(cancelRegistration('past')).ok).toBe(false);
+    expect(store.getState().registrations.byUserId.a.past).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: /Upcoming/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Cancel registration' }));
-    expect(screen.queryByRole('heading', { name: 'Past experience' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Future experience' })).not.toBeInTheDocument();
   });
 });
