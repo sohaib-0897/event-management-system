@@ -2,6 +2,10 @@
 
 A browser-based event management assignment built with Vite, React in JavaScript, Redux Toolkit, React Router, Tailwind CSS, and Vitest. There is no backend.
 
+## Live demo
+
+URL: _Coming soon — add the deployed URL here._
+
 ## Run locally
 
 Requires Node.js 22.12+ and npm.
